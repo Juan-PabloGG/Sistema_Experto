@@ -1,0 +1,354 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package sistemaexperto;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+public class BaseDeConocimientos {
+    private List<Regla> reglas;
+    private List<PreguntaAdicional> preguntasAdicionales;
+
+    public BaseDeConocimientos() {
+        reglas = new ArrayList<>();
+        preguntasAdicionales = new ArrayList<>();
+        inicializarConocimientos();
+        inicializarPreguntasAdicionales();
+    }
+
+    private void inicializarConocimientos() {
+        reglas.add(new Regla(List.of("fiebre", "tos"), "gripe", "Reposo, mucha hidratacion, y medicamentos para la fiebre"));
+        reglas.add(new Regla(List.of("dolor_de_cabeza", "fiebre"), "migraña", "Analgesicos y descanso en un ambiente oscuro y tranquilo"));
+        reglas.add(new Regla(List.of("congestion_nasal", "dolor_de_garganta"), "resfriado", "Hidratacion, descanso, y descongestionantes"));
+        reglas.add(new Regla(List.of("dolor_de_estomago", "diarrea"), "gastroenteritis", "Hidratacion, dieta blanda, y descanso"));
+        reglas.add(new Regla(List.of("fiebre", "dolor_muscular"), "dengue", "Reposo, hidratacion, y analgesicos"));
+        reglas.add(new Regla(List.of("tos", "dificultad_para_respirar"), "asma", "Inhaladores y evitar alergenos"));
+        // Añade más reglas aquí
+    }
+
+    private void inicializarPreguntasAdicionales() {
+        preguntasAdicionales.add(new PreguntaAdicional("diarrea", List.of("¿Tiene vomitos?", "¿Tiene fiebre?", "¿Tiene dolor abdominal?")));
+        preguntasAdicionales.add(new PreguntaAdicional("tos", List.of("¿Tiene flema?", "¿Tiene dolor de garganta?", "¿Tiene dificultad para respirar?", "¿Tiene tos seca?", "¿Ha empeorado la tos por la noche?")));
+        preguntasAdicionales.add(new PreguntaAdicional("congestion_nasal", List.of("¿Tiene dolor de cabeza?", "¿Tiene fiebre?", "¿Tiene tos?", "¿Tiene estornudos frecuentes?", "¿Tiene picazon en los ojos?")));
+        preguntasAdicionales.add(new PreguntaAdicional("fiebre", List.of("¿Tiene escalofrios?", "¿Ha sudado mucho?", "¿Tiene dolor muscular?", "¿Tiene debilidad general?")));
+        preguntasAdicionales.add(new PreguntaAdicional("dolor_de_cabeza", List.of("¿Tiene mareos?", "¿Siente presion en la cabeza?", "¿Ha tenido problemas de vision?", "¿Tiene sensibilidad a la luz?")));
+        preguntasAdicionales.add(new PreguntaAdicional("dolor_de_garganta", List.of("¿Tiene dificultad para tragar?", "¿Tiene enrojecimiento en la garganta?", "¿Tiene inflamacion de las amigdalas?", "¿Tiene fiebre?")));
+        preguntasAdicionales.add(new PreguntaAdicional("dolor_de_estomago", List.of("¿Tiene nauseas?", "¿Ha tenido vomitos?", "¿Ha notado hinchazon abdominal?", "¿Tiene perdida del apetito?")));
+        preguntasAdicionales.add(new PreguntaAdicional("dificultad_para_respirar", List.of("¿Tiene silbidos al respirar?", "¿Siente opresion en el pecho?", "¿Ha tenido episodios de asfixia?", "¿Tiene fatiga?", "¿Tiene dolor en el pecho?")));
+        // Añade más preguntas adicionales aquí si es necesario
+    }
+
+    public List<Regla> getReglas() {
+        return reglas;
+    }
+
+    public Set<String> getCondiciones() {
+        Set<String> condiciones = new HashSet<>();
+        for (Regla regla : reglas) {
+            condiciones.addAll(regla.getCondiciones());
+        }
+        return condiciones;
+    }
+
+    public List<PreguntaAdicional> getPreguntasAdicionales() {
+        return preguntasAdicionales;
+    }
+
+    public List<String> getPreguntasAdicionalesPorSintoma(String sintoma) {
+        for (PreguntaAdicional preguntaAdicional : preguntasAdicionales) {
+            if (preguntaAdicional.getSintomaPrincipal().equals(sintoma)) {
+                return preguntaAdicional.getPreguntas();
+            }
+        }
+        return new ArrayList<>();
+    }
+}
+
+
+///////motor de inferencia
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+
+package sistemaexperto;
+
+import java.util.List;
+import java.util.Set;
+
+public class MotorDeInferencia {
+    private BaseDeConocimientos baseDeConocimientos;
+
+    public MotorDeInferencia(BaseDeConocimientos baseDeConocimientos) {
+        this.baseDeConocimientos = baseDeConocimientos;
+    }
+
+    public String inferir(Set<String> sintomas) {
+        for (Regla regla : baseDeConocimientos.getReglas()) {
+            if (sintomas.containsAll(regla.getCondiciones())) {
+                return "Diagnóstico: " + regla.getEnfermedad() + "\nTratamiento: " + regla.getTratamiento();
+            }
+        }
+        return "No se pudo determinar un diagnóstico basado en los síntomas proporcionados.";
+    }
+}
+
+//////////////////////////////////////REGLA
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package sistemaexperto;    /*relacion de las enfermead*/
+
+import java.util.List;
+
+public class Regla {
+    private List<String> condiciones;
+    private String enfermedad;
+    private String tratamiento;
+
+    public Regla(List<String> condiciones, String enfermedad, String tratamiento) {
+        this.condiciones = condiciones;
+        this.enfermedad = enfermedad;
+        this.tratamiento = tratamiento;
+    }
+
+    public List<String> getCondiciones() {
+        return condiciones;
+    }
+
+    public String getEnfermedad() {
+        return enfermedad;
+    }
+
+    public String getTratamiento() {
+        return tratamiento;
+    }
+}
+
+
+////////////////////////////////////////////////////////SISTEMA EXPERTO APP
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package sistemaexperto;
+
+import java.util.HashSet;
+import java.util.Scanner;
+import java.util.Set;
+import java.util.List;
+import java.util.ArrayList;
+
+public class SistemaExpertoApp {
+    public static void main(String[] args) {
+        BaseDeConocimientos baseDeConocimientos = new BaseDeConocimientos();
+        MotorDeInferencia motorDeInferencia = new MotorDeInferencia(baseDeConocimientos);
+
+        Scanner scanner = new Scanner(System.in);
+        Set<String> sintomas = new HashSet<>();
+        Set<String> preguntasRealizadas = new HashSet<>();
+
+        for (String condicion : baseDeConocimientos.getCondiciones()) {
+            if (preguntasRealizadas.contains(condicion)) {
+                continue; // Salta la pregunta si ya se realizó
+            }
+
+            String respuesta = "";
+            while (!respuesta.equals("s") && !respuesta.equals("n")) {
+                System.out.println("¿Tiene " + condicion.replace("_", " ") + "? (s/n):");
+                respuesta = scanner.nextLine().trim().toLowerCase();
+                if (!respuesta.equals("s") && !respuesta.equals("n")) {
+                    System.out.println("Por favor, ingrese 's' para si o 'n' para no.");
+                }
+            }
+
+            preguntasRealizadas.add(condicion);
+
+            if (respuesta.equals("s")) {
+                sintomas.add(condicion);
+                List<String> preguntasAdicionales = baseDeConocimientos.getPreguntasAdicionalesPorSintoma(condicion);
+                for (String pregunta : preguntasAdicionales) {
+                    if (preguntasRealizadas.contains(pregunta)) {
+                        continue; // Salta la pregunta si ya se realizó
+                    }
+
+                    respuesta = "";
+                    while (!respuesta.equals("s") && !respuesta.equals("n")) {
+                        System.out.println(pregunta + " (s/n):");
+                        respuesta = scanner.nextLine().trim().toLowerCase();
+                        if (!respuesta.equals("s") && !respuesta.equals("n")) {
+                            System.out.println("Por favor, ingrese 's' para si o 'n' para no.");
+                        }
+                    }
+
+                    preguntasRealizadas.add(pregunta);
+
+                    if (respuesta.equals("s")) {
+                        String sintomaAdicional = pregunta.replace("¿", "").replace("?", "").replace(" ", "_").toLowerCase();
+                        sintomas.add(sintomaAdicional);
+                    }
+                }
+            }
+        }
+
+        List<String> listaDeSintomas = new ArrayList<>(sintomas);
+        String resultado = motorDeInferencia.inferir(sintomas);
+        System.out.println(resultado);
+    }
+}
+
+///////////////////////////////////////////////////////////////SITEMA EXPERTO HUI
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package sistemaexperto;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+public class SistemaExpertoGUI extends JFrame {
+    private JTextField inputField;
+    private JTextArea resultArea;
+    private BaseDeConocimientos baseDeConocimientos;
+    private MotorDeInferencia motorDeInferencia;
+    private Iterator<String> condicionesIterator;
+    private Set<String> sintomas;
+    private String currentCondition;
+    private Iterator<String> preguntasIterator;
+    private String estado = "condiciones";
+
+    public SistemaExpertoGUI() {
+        baseDeConocimientos = new BaseDeConocimientos();
+        motorDeInferencia = new MotorDeInferencia(baseDeConocimientos);
+        condicionesIterator = baseDeConocimientos.getCondiciones().iterator();
+        sintomas = new HashSet<>();
+
+        setTitle("Sistema Experto");
+        setSize(400, 300);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+
+        inputField = new JTextField();
+        JButton nextButton = new JButton("Siguiente");
+        resultArea = new JTextArea();
+        resultArea.setEditable(false);
+
+        nextButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                handleNextButton();
+            }
+        });
+
+        inputField.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                handleInputField();
+            }
+        });
+
+        add(inputField, BorderLayout.NORTH);
+        add(nextButton, BorderLayout.CENTER);
+        add(new JScrollPane(resultArea), BorderLayout.SOUTH);
+
+        nextButton.doClick();  // Start the first question
+    }
+
+    private void handleNextButton() {
+        if (estado.equals("condiciones")) {
+            if (condicionesIterator.hasNext()) {
+                currentCondition = condicionesIterator.next();
+                resultArea.setText("¿Tiene " + currentCondition.replace("_", " ") + "? (s/n):");
+            } else {
+                String diagnostico = motorDeInferencia.inferir(sintomas);
+                resultArea.setText(diagnostico);
+                inputField.setEnabled(false);
+            }
+        } else if (estado.equals("preguntasAdicionales")) {
+            if (preguntasIterator.hasNext()) {
+                String pregunta = preguntasIterator.next();
+                resultArea.setText(pregunta + " (s/n):");
+            } else {
+                estado = "condiciones";
+                handleNextButton();
+            }
+        }
+    }
+
+    private void handleInputField() {
+        String respuesta = inputField.getText().trim().toLowerCase();
+        if (!respuesta.equals("s") && !respuesta.equals("n")) {
+            resultArea.setText("Por favor, ingrese 's' para si o 'n' para no.");
+        } else {
+            if (estado.equals("condiciones")) {
+                if (respuesta.equals("s")) {
+                    sintomas.add(currentCondition);
+                    List<String> preguntas = baseDeConocimientos.getPreguntasAdicionalesPorSintoma(currentCondition);
+                    if (!preguntas.isEmpty()) {
+                        preguntasIterator = preguntas.iterator();
+                        estado = "preguntasAdicionales";
+                    }
+                }
+                inputField.setText("");
+                handleNextButton();
+            } else if (estado.equals("preguntasAdicionales")) {
+                if (respuesta.equals("s")) {
+                    String pregunta = resultArea.getText().replace(" (s/n):", "").replace("¿", "").replace("?", "").replace(" ", "_").toLowerCase();
+                    sintomas.add(pregunta);
+                }
+                inputField.setText("");
+                handleNextButton();
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new SistemaExpertoGUI().setVisible(true);
+            }
+        });
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////pregunta adicional
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+
+package sistemaexperto;
+
+import java.util.List;
+
+public class PreguntaAdicional {
+    private String sintomaPrincipal;
+    private List<String> preguntas;
+
+    public PreguntaAdicional(String sintomaPrincipal, List<String> preguntas) {
+        this.sintomaPrincipal = sintomaPrincipal;
+        this.preguntas = preguntas;
+    }
+
+    public String getSintomaPrincipal() {
+        return sintomaPrincipal;
+    }
+
+    public List<String> getPreguntas() {
+        return preguntas;
+    }
+}
+
